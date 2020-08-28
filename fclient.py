@@ -1,5 +1,6 @@
 import zmq
 import sys
+import json
 
 context = zmq.Context()
 
@@ -12,6 +13,7 @@ except:
     print("No se pudo conectar al server")
 
 cmd = sys.argv[1]
+user = sys.argv[3]
 
 if cmd == 'upload':
     #subir el archivo
@@ -21,7 +23,7 @@ if cmd == 'upload':
     #'rb' read binary
     with open(filename,'rb') as f:
         bytes = f.read()
-        socket.send_multipart([b"upload", filename.encode('utf-8'), bytes])
+        socket.send_multipart([b"upload", filename.encode('utf-8'), user.encode('utf-8'), bytes])
         resp = socket.recv_string()
         print(resp)
 elif cmd == 'list':
