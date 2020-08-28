@@ -13,9 +13,10 @@ except:
     print("No se pudo conectar al server")
 
 cmd = sys.argv[1]
-user = sys.argv[3]
+
 
 if cmd == 'upload':
+    user = sys.argv[3]
     #subir el archivo
     filename = sys.argv[2]
     print("subiendo {}".format(filename))
@@ -28,14 +29,16 @@ if cmd == 'upload':
         print(resp)
 elif cmd == 'list':
     #list files
-    socket.send_multipart([bytes("list", encoding='utf-8')])
+    user = sys.argv[2]
+    socket.send_multipart([bytes("list", encoding='utf-8'),bytes(user, encoding='utf-8')])
     #recibir como multipart?
     resp = socket.recv_multipart()
     for ans in resp:
         print(ans.decode('utf-8'))
 elif cmd == 'download':
     filetodownload = sys.argv[2]
-    socket.send_multipart([bytes("download", encoding='utf-8'), bytes(filetodownload, encoding='utf-8')])
+    user = sys.argv[3]
+    socket.send_multipart([bytes("download", encoding='utf-8'), bytes(filetodownload, encoding='utf-8'),bytes(user, encoding='utf-8')])
     resp = socket.recv_multipart()
     if len(resp) == 3:
         filename = resp[1].decode('utf-8')
