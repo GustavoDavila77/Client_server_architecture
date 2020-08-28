@@ -35,10 +35,13 @@ elif cmd == 'download':
     filetodownload = sys.argv[2]
     socket.send_multipart([bytes("download", encoding='utf-8'), bytes(filetodownload, encoding='utf-8')])
     resp = socket.recv_multipart()
-    filename = resp[1].decode('utf-8')
-    print(filename)
-    with open('downloads/'+filename, 'wb') as f:
-            f.write(resp[2])
-    print("archivo descargado")
+    if len(resp) == 3:
+        filename = resp[1].decode('utf-8')
+        print(filename)
+        with open('downloads/'+filename, 'wb') as f:
+                f.write(resp[2])
+        print("archivo descargado")
+    else:
+        print(resp)
 else:
     print('Error, comando no valido')
