@@ -23,15 +23,14 @@ if cmd == 'upload':
 
     #'rb' read binary
     with open(filename,'rb') as f:
-        bytes = f.read()
-        socket.send_multipart([b"upload", filename.encode('utf-8'), user.encode('utf-8'), bytes])
+        contentbytes = f.read()
+        socket.send_multipart([b"upload", filename.encode('utf-8'), user.encode('utf-8'), contentbytes])
         resp = socket.recv_string()
         print(resp)
 elif cmd == 'list':
     #list files
     user = sys.argv[2]
     socket.send_multipart([bytes("list", encoding='utf-8'),bytes(user, encoding='utf-8')])
-    #recibir como multipart?
     resp = socket.recv_multipart()
     for ans in resp:
         print(ans.decode('utf-8'))

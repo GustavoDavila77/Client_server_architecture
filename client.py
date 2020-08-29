@@ -6,7 +6,7 @@ context = zmq.Context()
 #  Socket to talk to server
 print("Connecting to hello world server…")
 socket = context.socket(zmq.REQ) #REQ este socket va a ser utilizado para hacer solicitudes
-socket.connect("tcp://localhost:5555") #Se conect de modo local, por el pueto 5555
+socket.connect("tcp://25.4.71.110:5555") #Se conect de modo local, por el pueto 5555
 
 op = sys.argv[1]
 
