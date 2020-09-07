@@ -16,9 +16,9 @@ cmd = sys.argv[1]
 
 
 if cmd == 'upload':
+    filename = sys.argv[2]
     user = sys.argv[3]
     #subir el archivo
-    filename = sys.argv[2]
     print("subiendo {}".format(filename))
 
     #'rb' read binary
