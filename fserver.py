@@ -27,7 +27,11 @@ while True:
             if user in data:
                 print("el user already exist")
                 directorio = os.listdir(diruser)
-                if filename in directorio:
+
+                with open(diruser + filename, 'ab') as f:
+                    f.write(message[3])
+                    socket.send_string("File created!!")
+                """if filename in directorio:
                     print("file already exist")
                     socket.send_string("File already exist, change name")
                 else:
@@ -40,7 +44,7 @@ while True:
 
                     with open(diruser + filename, 'wb') as f:
                         f.write(message[3])
-                        socket.send_string("File created!!")
+                        socket.send_string("File created!!")"""
             else:
                 print("el user don´t exist")
                 os.makedirs("D:\Escritorio\Arquitectura cliente servidor\code/files/"+user) #new folder created
@@ -56,6 +60,7 @@ while True:
                     f.write(message[3])
                     socket.send_string("Ready!!")
 
+    #TODO set try except when user don´t exist
     elif message[0] == b'list':
         user = message[1].decode('utf-8')
         diruser = "D:\Escritorio\Arquitectura cliente servidor\code/files/"+user+"/"

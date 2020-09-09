@@ -1,6 +1,7 @@
 import zmq
 import sys
 import json
+import os
 
 context = zmq.Context()
 
@@ -13,20 +14,29 @@ except:
     print("No se pudo conectar al server")
 
 cmd = sys.argv[1]
-
+partsize = 1024*1024 #N° MBytes
 
 if cmd == 'upload':
     filename = sys.argv[2]
-    user = sys.argv[3]
+    print(filename)
+    #size_filename = os.path.getsize("D:\Escritorio\Arquitectura cliente servidor\code/"+filename)
+    #print("size filename: {}".format(size_filename))
+    
+    #user = sys.argv[3]
     #subir el archivo
-    print("subiendo {}".format(filename))
+    #print("subiendo {}".format(filename))
 
     #'rb' read binary
+    user = sys.argv[3]
+    print("subiendo {}".format(filename))
     with open(filename,'rb') as f:
-        contentbytes = f.read()
-        socket.send_multipart([b"upload", filename.encode('utf-8'), user.encode('utf-8'), contentbytes])
-        resp = socket.recv_string()
-        print(resp)
+        while True:
+            contentbytes = f.read(partsize)
+            if not contentbytes:
+                break
+            socket.send_multipart([b"upload", filename.encode('utf-8'), user.encode('utf-8'), contentbytes])
+            resp = socket.recv_string()
+            print(resp)
 elif cmd == 'list':
     #list files
     user = sys.argv[2]
