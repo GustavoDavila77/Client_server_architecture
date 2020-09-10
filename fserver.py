@@ -30,7 +30,7 @@ while True:
 
                 with open(diruser + filename, 'ab') as f:
                     f.write(message[3])
-                    socket.send_string("File created!!")
+                    socket.send_string("Part upload!!")
                 """if filename in directorio:
                     print("file already exist")
                     socket.send_string("File already exist, change name")
