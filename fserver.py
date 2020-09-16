@@ -18,6 +18,11 @@ while True:
         # client wants to upload a file
         filename = message[1].decode('utf-8')
         user = message[2].decode('utf-8')
+        parthash = message[4].decode('utf-8')
+        complethash = message[5].decode('utf-8')
+        print("parthash: {}".format(parthash))
+        print("complethash: {}".format(complethash))
+                
         diruser = "D:\Escritorio\Arquitectura cliente servidor\code/files/"+user+"/"
         print(user)
 
@@ -27,10 +32,49 @@ while True:
             if user in data:
                 print("el user already exist")
                 directorio = os.listdir(diruser)
+                
+                #si el archivo ya existe(complethash) entonces hacer el apend de los parthash
+                #sino entonces crear un nuevo complethash
+                print("//////////////////////////")
+                complethash_list = list(data[user])
+                print(complethash_list)
+
+                #TODO como buscar un key dentro de una array
+                if complethash in complethash_list:
+                    print("complethash already exist")
+                    """
+                    print(data[user][complethash]["parthash"])
+                    data[user][complethash]["parthash"].append(parthash)
+
+                    with open('data.json', 'w') as file:
+                        json.dump(data, file, indent=4)
+                else:
+                    data[user] = {
+                        complethash: {
+                            "filename": filename,
+                            "owner": user,
+                            "parthash": [parthash]
+                        }
+                    }
+
+                    with open('data.json', 'w') as file:
+                        json.dump(data, file, indent=4)"""
+
+                """elementos = data.items()
+                for key, valor in elementos:
+                    elementosanidados = key.items()
+                    if complethash in elementosanidados:
+                        print("apend parthash")
+                print(elementos)"""
+
+                """
+                with open('data.json', 'w') as file:
+                        json.dump(data, file, indent=4)"""
 
                 with open(diruser + filename, 'ab') as f:
                     f.write(message[3])
                     socket.send_string("Part upload!!")
+
                 """if filename in directorio:
                     print("file already exist")
                     socket.send_string("File already exist, change name")
@@ -49,10 +93,21 @@ while True:
                 print("el user don´t exist")
                 os.makedirs("D:\Escritorio\Arquitectura cliente servidor\code/files/"+user) #new folder created
                 data[user] = []
-                #TODO poner el filename: fecha
-                datenow = str(datetime.now())
+                #datenow = str(datetime.now())
                 data[user].append({
-                filename: datenow})
+                    complethash: {
+                        "filename": filename,
+                        "owner": user,
+                        "parthash": [parthash]
+                    }})
+                """
+                data[user] = {
+                    complethash: {
+                        "filename": filename,
+                        "owner": user,
+                        "parthash": [parthash]
+                    }
+                }"""
                 with open('data.json', 'w') as file:
                     json.dump(data, file, indent=4)
 
