@@ -1,0 +1,12 @@
+{
+    "server1": {
+        "ip": "localhost",
+        "port": "6000",
+        "capacity": "198"
+    },
+    "server2": {
+        "ip": "localhost",
+        "port": "7000",
+        "capacity": "298"
+    }
+}

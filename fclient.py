@@ -43,7 +43,8 @@ class Client():
     
             if cmd == 'upload':
                 filename = sys.argv[2]
-                self.upload(socket,filename)
+                self.sendInfoProxy(socket,filename)
+                #self.upload(socket,filename)
                 
             elif cmd == 'list':
                 user = sys.argv[2]
@@ -59,7 +60,23 @@ class Client():
         except ValueError:
             print("No se pudo conectar al server")
 
-        
+    def sendInfoProxy(self,socket,filename):
+        print("enviando info al proxy de {}".format(filename))
+        hash_whole_file = self.complethash(filename)
+        part_hash = self.partHash(filename)
+        print("hash_whole_file: {}".format(hash_whole_file))
+        print("parthash: {}".format(part_hash))
+        user = sys.argv[3]
+        fileinfo = {
+            "user": user,
+            "filename": filename,
+            "parts": part_hash,
+            "complethash": hash_whole_file
+        }
+        socket.send_json(fileinfo)
+        resp = socket.recv_string()
+        print(resp)
+
 
     def upload(self,socket,filename):
         print(filename)
@@ -99,8 +116,21 @@ class Client():
             completbytes = f.read()
             #print("completbytes: {}".format(completbytes))
             hash= self.hashobj.getHash(completbytes)
-            print("complethash: {}".format(hash))
+            #print("complethash: {}".format(hash))
             return hash
+
+    def partHash(self,filename):
+        hashes = []
+        with open(filename,'rb') as f:
+            while True:
+                partbytes = f.read(partsize)
+                if not partbytes:
+                    break
+                parthash= self.hashobj.getHash(partbytes)
+                hashes.append(parthash)
+                #print("parthash: {}".format(parthash))
+            return hashes
+
 
     def sendRequest(self,socket,option,filename,user,complethash):
         with open(filename,'rb') as f:
