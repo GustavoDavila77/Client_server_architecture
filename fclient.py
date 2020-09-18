@@ -74,7 +74,7 @@ class Client():
             "complethash": hash_whole_file
         }
         socket.send_json(fileinfo)
-        resp = socket.recv_string()
+        resp = socket.recv_json()
         print(resp)
 
 
