@@ -10,7 +10,8 @@ class FServer():
     #en los argumentos recivir la carpeta donde va a se almacenado todo
     def __init__(self):
         self.context = zmq.Context() #nos permite crear el socket
-        
+        self.dirservers = "D:\Escritorio\Arquitectura cliente servidor\code/files/"
+
     def run(self):
         validation = self.receiveParameters()
         if validation == True:
@@ -18,11 +19,12 @@ class FServer():
             self.ip_proxy = sys.argv[2]
             self.name_server = sys.argv[3]
             self.server_capacity = sys.argv[4]
+            
+            if self.saveServer() == True:
+                socket = self.initSocket()
+                self.conectProxy()
 
-            socket = self.initSocket()
-            self.conectProxy()
-            self.saveServer()
-            #self.receive(socket)
+                self.receive(socket)
 
     def receiveParameters(self):
         boolean = True
@@ -61,8 +63,8 @@ class FServer():
         print("Connection with proxy in {}!!!".format(self.ip_proxy))
 
     def saveServer(self):
-        #TODO at begining clear info_servers
         #valid that ip and port not exist
+        create_bool = True
         f = open('info_servers.json','r')
         servers_dict = json.load(f)
         list_servers = list(servers_dict)
@@ -74,41 +76,51 @@ class FServer():
                 server_bool = False
 
         f.close()
+        
         if server_bool == True:
-            print("authorization created server")
-            info_server = {
-                    "ip": "localhost",
-                    "port": self.port_server,
-                    "capacity": self.server_capacity
-            }
-            f = open('info_servers.json','w')
-            servers_dict[self.name_server] = info_server
-            json.dump(servers_dict, f, indent=4)
-            f.close()
-
-
+            list_folders = os.listdir(self.dirservers)
+            if self.name_server in list_folders:
+                print("Folder name already exist")
+                create_bool = False
+            else:
+                os.makedirs("D:\Escritorio\Arquitectura cliente servidor\code/files/"+ self.name_server) #new folder created
+                print("new server working")
+                info_server = {
+                        "ip": "localhost",
+                        "port": self.port_server,
+                        "capacity": self.server_capacity
+                }
+                f = open('info_servers.json','w')
+                servers_dict[self.name_server] = info_server
+                json.dump(servers_dict, f, indent=4)
+                f.close()    
         else:
-            print("no authorizated")
+            print("server is already working")
+        
+        return create_bool
             
 
     def receive(self,socket):
-        pass
-        """
+
         while True:
             message = socket.recv_multipart()
 
             if message[0] == b'upload':
                 # client wants to upload a file
-                filename = message[1].decode('utf-8')
-                user = message[2].decode('utf-8')
-                parthash = message[4].decode('utf-8')
-                complethash = message[5].decode('utf-8')
-                print("parthash: {}".format(parthash))
-                print("complethash: {}".format(complethash))
+                # filename = message[1].decode('utf-8')
+                # user = message[2].decode('utf-8')
+                name_parthash = message[1].decode('utf-8')
+                #complethash = message[5].decode('utf-8')
+                print("name_parthash: {}".format(name_parthash))
+                #print("complethash: {}".format(complethash))
                         
-                diruser = "D:\Escritorio\Arquitectura cliente servidor\code/files/"+user+"/"
-                print(user)
-
+                dirserver = "D:\Escritorio\Arquitectura cliente servidor\code/files/"+self.name_server+"/"
+                print(self.name_server)
+                
+                with open(dirserver + name_parthash, 'wb') as f:
+                    f.write(message[2])
+                    socket.send_string("File created!!")
+                """
                 with open('data.json') as file:
                     data = json.load(file)
 
@@ -195,7 +207,7 @@ class FServer():
 
                         with open(diruser + filename, 'wb') as f:
                             f.write(message[3])
-                            socket.send_string("Ready!!")
+                            socket.send_string("Ready!!")"""
 
             #TODO set try except when user don´t exist
             elif message[0] == b'list':
@@ -224,7 +236,7 @@ class FServer():
 
             else:
                 print('Error!!')
-                socket.send_string("Error") """
+                socket.send_string("Error")
 
 if __name__ == "__main__":
     #TODO iniciarlizar servers

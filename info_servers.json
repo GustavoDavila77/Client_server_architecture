@@ -2,21 +2,16 @@
     "server1": {
         "ip": "localhost",
         "port": "6000",
-        "capacity": "194"
+        "capacity": "1998"
     },
     "server2": {
         "ip": "localhost",
         "port": "7000",
-        "capacity": "394"
+        "capacity": "1998"
     },
     "server3": {
         "ip": "localhost",
         "port": "8000",
-        "capacity": "597"
-    },
-    "server4": {
-        "ip": "localhost",
-        "port": "5678",
-        "capacity": "67"
+        "capacity": "1999"
     }
 }

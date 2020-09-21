@@ -37,13 +37,14 @@ class Client():
             #función que reciva 2 o 3 parametros
             print("Connecting to hello world server…")
             socket = self.context.socket(zmq.REQ) #REQ este socket va a ser utilizado para hacer solicitudes
-            socket.connect("tcp://localhost:5555") #Se conect de modo local, por el pueto 5555
+            socket.connect("tcp://{}".format(sys.argv[4])) #Se conect de modo local, por el pueto 5555
             
             cmd = sys.argv[1]
     
             if cmd == 'upload':
                 filename = sys.argv[2]
-                self.sendInfoProxy(socket,filename)
+                info_send = self.sendInfoProxy(socket,filename)
+                self.sendDataServers(info_send)
                 #self.upload(socket,filename)
                 
             elif cmd == 'list':
@@ -64,8 +65,8 @@ class Client():
         print("enviando info al proxy de {}".format(filename))
         hash_whole_file = self.complethash(filename)
         part_hash = self.partHash(filename)
-        print("hash_whole_file: {}".format(hash_whole_file))
-        print("parthash: {}".format(part_hash))
+        #print("hash_whole_file: {}".format(hash_whole_file))
+        #print("parthash: {}".format(part_hash))
         user = sys.argv[3]
         fileinfo = {
             "user": user,
@@ -76,7 +77,32 @@ class Client():
         socket.send_json(fileinfo)
         resp = socket.recv_json()
         print(resp)
+        return resp
 
+    def sendDataServers(self, info_send):
+        dir_servers = info_send['servers']
+        index = 0
+        for dir in dir_servers:
+            socket = self.context.socket(zmq.REQ)
+            socket.connect("tcp://" + dir)
+
+            with open(info_send['filename'],'rb') as f:
+                partbytes = f.read(partsize)
+                if not partbytes:
+                    break
+                socket.send_multipart([b'upload', info_send['parts'][index].encode('utf-8'),  partbytes])
+                resp = socket.recv_string()
+                print(resp)
+            index += 1
+            socket.close()
+        
+        """
+        socket = self.context.socket(zmq.REQ)
+		socket.connect("tcp://"+address)
+
+        socket.send_multipart([option, filename.encode('utf-8'), user.encode('utf-8'), partbytes, parthash.encode('utf-8'), complethash.encode('utf-8')])
+        resp = socket.recv_string()
+        print(resp)"""
 
     def upload(self,socket,filename):
         print(filename)
