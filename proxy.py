@@ -1,12 +1,13 @@
 import zmq
 import os
 import json
+import sys
 
 context = zmq.Context() #de momento, nos permite crear el socket
 socket = context.socket(zmq.REP) #REP(REPLY) define el papel que va a tomar el socket, en este caso responder
-socket.bind("tcp://*:5555") #se enlaza por medio del protocolo tcp y va a responder todo lo que venga del pueto 5555
+socket.bind("tcp://*:{}".format(sys.argv[1])) #se enlaza por medio del protocolo tcp y va a responder todo lo que venga del pueto 5555
 
-print("Socket Proxy created!!!")
+print("Socket Proxy created in port {}!!!".format(sys.argv[1]))
 
 class Proxy():
 

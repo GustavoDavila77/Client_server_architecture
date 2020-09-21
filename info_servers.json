@@ -13,5 +13,10 @@
         "ip": "localhost",
         "port": "8000",
         "capacity": "597"
+    },
+    "server4": {
+        "ip": "localhost",
+        "port": "5678",
+        "capacity": "67"
     }
 }
