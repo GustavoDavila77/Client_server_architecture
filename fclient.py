@@ -45,17 +45,21 @@ class Client():
                 filename = sys.argv[2]
                 info_send = self.sendInfoProxy(socket,filename)
                 self.sendDataServers(info_send)
+                socket.close()
                 #self.upload(socket,filename)
                 
             elif cmd == 'list':
                 socket.connect("tcp://{}".format(sys.argv[3])) #Se conect de modo local, por el pueto indicado en la linea de comandos
                 user = sys.argv[2]
                 self.list(socket,user)
+                socket.close()
                 
             elif cmd == 'download':
+                socket.connect("tcp://{}".format(sys.argv[4])) 
                 filetodownload = sys.argv[2]
                 user = sys.argv[3]
                 self.download(socket,filetodownload,user)
+                socket.close()
                 
             else:
                 print('Error, comando no valido')
@@ -98,18 +102,7 @@ class Client():
                 resp = socket.recv_string()
                 print(resp)
             index += 1
-            socket.close()
-
-    def upload(self,socket,filename):
-        #size_filename = os.path.getsize("D:\Escritorio\Arquitectura cliente servidor\code/"+filename)
-
-        user = sys.argv[3]
-        print("subiendo {}".format(filename))
-        
-        hash_whole_file = self.complethash(filename)
-        self.sendRequest(socket, b"upload", filename, user, hash_whole_file)
-
-        
+            socket.close()        
 
     def list(self,socket,user):
         socket.send_multipart([bytes("list", encoding='utf-8'),bytes(user, encoding='utf-8')])
@@ -118,6 +111,36 @@ class Client():
             print(ans.decode('utf-8'))
 
     def download(self,socket,filetodownload,user):
+        # send request to proxy about file client wants download
+        # proxy return server address and parts_hash to download
+        socket.send_multipart([b'download', filetodownload.encode('utf-8'), user.encode('utf-8')])
+        resp_proxy = socket.recv_json()
+        print(resp_proxy)
+        socket.close()
+        #if the dictionary don´t empty
+        if resp_proxy:
+            filename = resp_proxy['filename']
+            dir_servers = resp_proxy['servers']
+            #print(dir_servers)
+            index = 0
+            for dir in dir_servers:
+                socket = self.context.socket(zmq.REQ)
+                socket.connect("tcp://" + dir)
+                socket.send_multipart([b'download', resp_proxy['parts'][index].encode('utf-8')])
+                resp = socket.recv_multipart()
+                
+                if resp[0] == b'downloading':
+                    with open('downloads/'+filename, 'ab') as f:
+                        f.write(resp[1])
+                    print("parte descargada")
+                index += 1
+                socket.close()
+            print("download ready")
+
+        else:
+            print("don´t founded")
+
+        """
         socket.send_multipart([bytes("download", encoding='utf-8'), bytes(filetodownload, encoding='utf-8'),bytes(user, encoding='utf-8')])
         resp = socket.recv_multipart()
         if len(resp) == 3:
@@ -127,7 +150,7 @@ class Client():
                     f.write(resp[2])
             print("archivo descargado")
         else:
-            print(resp)
+            print(resp)"""
         
     def complethash(self,filename):
         #'rb' read binary

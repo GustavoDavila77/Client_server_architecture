@@ -131,14 +131,15 @@ class FServer():
                 socket.send_multipart(archivos)
 
             elif message[0] == b'download':
-                filename = message[1].decode('utf-8')
-                user = message[2].decode('utf-8')
-                diruser = "D:\Escritorio\Arquitectura cliente servidor\code/files/"+user+"/"
-                print(filename)
+                part_hash = message[1].decode('utf-8')
+                print(part_hash)
+                print(self.name_server)
+                dir_server = "D:\Escritorio\Arquitectura cliente servidor\code/files/"+self.name_server+"/"
+            
                 try:
-                    with open(diruser+ filename,'rb') as f:
+                    with open(dir_server+ part_hash,'rb') as f:
                         bytes = f.read()
-                        socket.send_multipart([b"downloadfile", filename.encode('utf-8'), bytes])
+                        socket.send_multipart([b"downloading", bytes])
                 except:
                     socket.send_multipart([b"Notfound"])
 

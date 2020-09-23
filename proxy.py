@@ -26,6 +26,12 @@ class Proxy():
                 list_file = self.listFilesUser(user)
                 socket.send_multipart(list_file)
 
+            if message[0] == b'download':
+                filename = message[1].decode('utf-8')
+                user = message[2].decode('utf-8')
+                info_download = self.infoDownload(filename,user)
+                socket.send_json(info_download)
+
     def returnInfoServers(self, new_message):
         message = json.loads(new_message)
         parts = message['parts']
@@ -107,6 +113,17 @@ class Proxy():
                 list_file.append(info_dict[key_hash]['filename'].encode('utf-8'))
 
         return list_file
+    
+    def infoDownload(self,filename, user):
+        f = open('info_proxy.json','r')
+        info_dict = json.load(f)
+        f.close()
+
+        list_hash = list(info_dict)
+        for key_hash in list_hash:
+            if (info_dict[key_hash]['user'] == user) and (info_dict[key_hash]['filename'] == filename):
+                return info_dict[key_hash]
+        return {}
 
 if __name__ == "__main__":
     #TODO iniciarlizar servers
