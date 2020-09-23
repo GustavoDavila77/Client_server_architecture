@@ -37,17 +37,18 @@ class Client():
             #función que reciva 2 o 3 parametros
             print("Connecting to hello world server…")
             socket = self.context.socket(zmq.REQ) #REQ este socket va a ser utilizado para hacer solicitudes
-            socket.connect("tcp://{}".format(sys.argv[4])) #Se conect de modo local, por el pueto 5555
+            
             
             cmd = sys.argv[1]
-    
             if cmd == 'upload':
+                socket.connect("tcp://{}".format(sys.argv[4])) #Se conect de modo local, por el pueto indicado en la linea de comandos
                 filename = sys.argv[2]
                 info_send = self.sendInfoProxy(socket,filename)
                 self.sendDataServers(info_send)
                 #self.upload(socket,filename)
                 
             elif cmd == 'list':
+                socket.connect("tcp://{}".format(sys.argv[3])) #Se conect de modo local, por el pueto indicado en la linea de comandos
                 user = sys.argv[2]
                 self.list(socket,user)
                 
@@ -74,11 +75,14 @@ class Client():
             "parts": part_hash,
             "complethash": hash_whole_file
         }
-        socket.send_json(fileinfo)
+        #socket.send_json(fileinfo)
+        str_json = json.dumps(fileinfo)
+        socket.send_multipart([b'upload', str_json.encode('utf-8')])
         resp = socket.recv_json()
         print(resp)
         return resp
 
+    #TODO optimizar conexiones y envio de datos a los servers (agruparlos)
     def sendDataServers(self, info_send):
         dir_servers = info_send['servers']
         index = 0
@@ -97,11 +101,8 @@ class Client():
             socket.close()
 
     def upload(self,socket,filename):
-        print(filename)
         #size_filename = os.path.getsize("D:\Escritorio\Arquitectura cliente servidor\code/"+filename)
-        #hashobj = Hash("md5")
-        #print(hashobj.getHash(filename))
-        
+
         user = sys.argv[3]
         print("subiendo {}".format(filename))
         

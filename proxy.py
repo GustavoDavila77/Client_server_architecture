@@ -11,13 +11,43 @@ print("Socket Proxy created in port {}!!!".format(sys.argv[1]))
 
 class Proxy():
 
-    #recibir como parametro el array de hash
+    def run(self):
+        #TODO poner validaciones en los métodos
+        while True:
+            message = socket.recv_multipart()
+            #message = socket.recv_json()
+            if message[0] == b'upload':
+                info_message = message[1].decode('utf-8')
+                #print(info_message)
+                self.returnInfoServers(info_message)
+
+            if message[0] == b'list':
+                user = message[1].decode('utf-8')
+                list_file = self.listFilesUser(user)
+                socket.send_multipart(list_file)
+
+    def returnInfoServers(self, new_message):
+        message = json.loads(new_message)
+        parts = message['parts']
+        len_hash_part = len(parts)
+        port_servers = self.servers(len_hash_part)
+        user = message['user']
+        filename = message['filename']
+        complethash = message['complethash']         
+        
+        info_response = {
+            "user": user,
+            "filename": filename,
+            "parts": parts,
+            "servers": port_servers,
+            "complethash": complethash
+        }
+        self.saveInfo(info_response)
+        #print(message)
+        socket.send_json(info_response)
+
     def servers(self,len_hash_part):
-        #entrar a info_servers y verificar que capacidad > 0 solo para probar
-        #implement round robins algorithm - investigar como es la teoria
-        #poner un hash en cada server e ir disminuyendo el atributo capacity
-        #surge una duda, como seria la implementación cuando se quiera enviar cada uno de
-        # esos hash y bytes a los servers ??
+
         ip_ports_servers = [] 
         f = open('info_servers.json','r')
         servers_dict = json.load(f)
@@ -25,21 +55,17 @@ class Proxy():
         print(servers_dict)
         
         list_servers = list(servers_dict)
-        #print(list_servers)
         
-        #hacer un while donde se recorra el lenght del array de hash 
-        #y obtener el server 
         print("/////////////////")
         print("len_hash_part: " + str(len_hash_part))
 
-        #f = open('info_servers.json','w')
         while (len_hash_part > 0):
 
             for server in list_servers:
                 if len_hash_part == 0:
                     break
                 if int(servers_dict[server]['capacity']) > 0:
-                    #f.close()
+                    
                     f = open('info_servers.json','w')
                     servers_dict[server]['capacity'] = str(int(servers_dict[server]['capacity'])-1)
                     json.dump(servers_dict, f, indent=4)
@@ -49,7 +75,7 @@ class Proxy():
                 else:
                     print("el server {} no tiene espacio".format(server))
                 print(len_hash_part)
-        #f.close()
+
         return ip_ports_servers
 
     def saveInfo(self,info_response):
@@ -69,28 +95,18 @@ class Proxy():
         json.dump(info_dict, f, indent=4) 
         f.close()
 
-    def run(self):
-        #TODO almacenar la info de cada archivo
-        #TODO poner validaciones en los métodos
-        while True:
-            message = socket.recv_json()
-            parts = message['parts']
-            len_hash_part = len(parts)
-            port_servers = self.servers(len_hash_part)
-            user = message['user']
-            filename = message['filename']
-            complethash = message['complethash']         
-            
-            info_response = {
-                "user": user,
-                "filename": filename,
-                "parts": parts,
-                "servers": port_servers,
-                "complethash": complethash
-            }
-            self.saveInfo(info_response)
-            #print(message)
-            socket.send_json(info_response)
+    def listFilesUser(self,user):
+        list_file = []
+        f = open('info_proxy.json','r')
+        info_dict = json.load(f)
+        f.close()
+        list_hash = list(info_dict) #get key_list
+        print(list_hash)
+        for key_hash in list_hash:
+            if info_dict[key_hash]['user'] == user:
+                list_file.append(info_dict[key_hash]['filename'].encode('utf-8'))
+
+        return list_file
 
 if __name__ == "__main__":
     #TODO iniciarlizar servers

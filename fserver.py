@@ -106,13 +106,9 @@ class FServer():
             message = socket.recv_multipart()
 
             if message[0] == b'upload':
-                # client wants to upload a file
-                # filename = message[1].decode('utf-8')
-                # user = message[2].decode('utf-8')
+    
                 name_parthash = message[1].decode('utf-8')
-                #complethash = message[5].decode('utf-8')
                 print("name_parthash: {}".format(name_parthash))
-                #print("complethash: {}".format(complethash))
                         
                 dirserver = "D:\Escritorio\Arquitectura cliente servidor\code/files/"+self.name_server+"/"
                 print(self.name_server)
@@ -120,94 +116,6 @@ class FServer():
                 with open(dirserver + name_parthash, 'wb') as f:
                     f.write(message[2])
                     socket.send_string("File created!!")
-                """
-                with open('data.json') as file:
-                    data = json.load(file)
-
-                    if user in data:
-                        print("el user already exist")
-                        directorio = os.listdir(diruser)
-                        
-                        #si el archivo ya existe(complethash) entonces hacer el apend de los parthash
-                        #sino entonces crear un nuevo complethash
-                        print("//////////////////////////")
-                        complethash_list = list(data[user])
-                        print(complethash_list)
-
-                        if complethash in complethash_list:
-                            print("complethash already exist")
-                            
-                            print(data[user][complethash]["parthash"])
-                            data[user][complethash]["parthash"].append(parthash)
-
-                            with open('data.json', 'w') as file:
-                                json.dump(data, file, indent=4)
-                        else:
-                            data[user] = {
-                                complethash: {
-                                    "filename": filename,
-                                    "owner": user,
-                                    "parthash": [parthash]
-                                }
-                            }
-
-                            with open('data.json', 'w') as file:
-                                json.dump(data, file, indent=4)
-
-                        elementos = data.items()
-                        for key, valor in elementos:
-                            elementosanidados = key.items()
-                            if complethash in elementosanidados:
-                                print("apend parthash")
-                        print(elementos)
-
-                        
-                        with open('data.json', 'w') as file:
-                                json.dump(data, file, indent=4)
-
-                        with open(diruser + filename, 'ab') as f:
-                            f.write(message[3])
-                            socket.send_string("Part upload!!")
-
-                        if filename in directorio:
-                            print("file already exist")
-                            socket.send_string("File already exist, change name")
-                        else:
-                            datenow = str(datetime.now())
-                            data[user].append({
-                            filename: datenow})
-
-                            with open('data.json', 'w') as file:
-                                json.dump(data, file, indent=4)
-
-                            with open(diruser + filename, 'wb') as f:
-                                f.write(message[3])
-                                socket.send_string("File created!!")
-                    else:
-                        print("el user don´t exist")
-                        os.makedirs("D:\Escritorio\Arquitectura cliente servidor\code/files/"+user) #new folder created
-                        data[user] = []
-                        #datenow = str(datetime.now())
-                        data[user].append({
-                            complethash: {
-                                "filename": filename,
-                                "owner": user,
-                                "parthash": [parthash]
-                            }})
-                        
-                        data[user] = {
-                            complethash: {
-                                "filename": filename,
-                                "owner": user,
-                                "parthash": [parthash]
-                            }
-                        }
-                        with open('data.json', 'w') as file:
-                            json.dump(data, file, indent=4)
-
-                        with open(diruser + filename, 'wb') as f:
-                            f.write(message[3])
-                            socket.send_string("Ready!!")"""
 
             #TODO set try except when user don´t exist
             elif message[0] == b'list':
