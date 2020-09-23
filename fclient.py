@@ -95,14 +95,6 @@ class Client():
                 print(resp)
             index += 1
             socket.close()
-        
-        """
-        socket = self.context.socket(zmq.REQ)
-		socket.connect("tcp://"+address)
-
-        socket.send_multipart([option, filename.encode('utf-8'), user.encode('utf-8'), partbytes, parthash.encode('utf-8'), complethash.encode('utf-8')])
-        resp = socket.recv_string()
-        print(resp)"""
 
     def upload(self,socket,filename):
         print(filename)

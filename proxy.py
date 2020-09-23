@@ -52,7 +52,22 @@ class Proxy():
         #f.close()
         return ip_ports_servers
 
-                
+    def saveInfo(self,info_response):
+        f = open('info_proxy.json','r')
+        info_dict = json.load(f)
+        f.close()
+
+        f = open('info_proxy.json','w')
+        id_complethash = info_response['complethash']
+        new_info = {
+            "user": info_response['user'],
+            "filename": info_response['filename'],
+            "parts": info_response['parts'],
+            "servers": info_response['servers']
+        }
+        info_dict[id_complethash] = new_info
+        json.dump(info_dict, f, indent=4) 
+        f.close()
 
     def run(self):
         #TODO almacenar la info de cada archivo
@@ -73,6 +88,7 @@ class Proxy():
                 "servers": port_servers,
                 "complethash": complethash
             }
+            self.saveInfo(info_response)
             #print(message)
             socket.send_json(info_response)
 
