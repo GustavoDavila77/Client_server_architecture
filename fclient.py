@@ -88,21 +88,29 @@ class Client():
 
     #TODO optimizar conexiones y envio de datos a los servers (agruparlos)
     def sendDataServers(self, info_send):
+        conexiones = {}
+        socket = self.context.socket(zmq.REQ)
         dir_servers = info_send['servers']
         index = 0
-        for dir in dir_servers:
-            socket = self.context.socket(zmq.REQ)
-            socket.connect("tcp://" + dir)
 
+        for dir in dir_servers:
+            #socket = self.context.socket(zmq.REQ)
+            if not (dir in conexiones):
+                socket.connect("tcp://" + dir)
+                #print(connection) 
+                conexiones[dir] = socket.connect("tcp://" + dir)
+                print("new connection")
+            
             with open(info_send['filename'],'rb') as f:
                 partbytes = f.read(partsize)
                 if not partbytes:
                     break
-                socket.send_multipart([b'upload', info_send['parts'][index].encode('utf-8'),  partbytes])
+                conexiones[dir].send_multipart([b'upload', info_send['parts'][index].encode('utf-8'),  partbytes])
                 resp = socket.recv_string()
                 print(resp)
-            index += 1
-            socket.close()        
+
+            index += 1   
+        #socket.close() python se encarga de cerrarlas    
 
     def list(self,socket,user):
         socket.send_multipart([bytes("list", encoding='utf-8'),bytes(user, encoding='utf-8')])
@@ -139,18 +147,6 @@ class Client():
 
         else:
             print("don´t founded")
-
-        """
-        socket.send_multipart([bytes("download", encoding='utf-8'), bytes(filetodownload, encoding='utf-8'),bytes(user, encoding='utf-8')])
-        resp = socket.recv_multipart()
-        if len(resp) == 3:
-            filename = resp[1].decode('utf-8')
-            print(filename)
-            with open('downloads/'+filename, 'wb') as f:
-                    f.write(resp[2])
-            print("archivo descargado")
-        else:
-            print(resp)"""
         
     def complethash(self,filename):
         #'rb' read binary
