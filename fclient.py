@@ -89,28 +89,31 @@ class Client():
     #TODO optimizar conexiones y envio de datos a los servers (agruparlos)
     def sendDataServers(self, info_send):
         conexiones = {}
-        socket = self.context.socket(zmq.REQ)
+        context = zmq.Context()
+        socket = context.socket(zmq.REQ)
+        #conexiones["s"] = socket
         dir_servers = info_send['servers']
+        #print(dir_servers)
         index = 0
 
-        for dir in dir_servers:
+        for dire in dir_servers:
             #socket = self.context.socket(zmq.REQ)
-            if not (dir in conexiones):
-                socket.connect("tcp://" + dir)
+            if not (dire in conexiones):
+                socket.connect("tcp://" + dire)
                 #print(connection) 
-                conexiones[dir] = socket.connect("tcp://" + dir)
+                conexiones[dire] = socket
                 print("new connection")
-            
+
             with open(info_send['filename'],'rb') as f:
                 partbytes = f.read(partsize)
                 if not partbytes:
                     break
-                conexiones[dir].send_multipart([b'upload', info_send['parts'][index].encode('utf-8'),  partbytes])
-                resp = socket.recv_string()
+                conexiones[dire].send_multipart([b'upload', info_send['parts'][index].encode('utf-8'),  partbytes])
+                print(dire)
+                resp = conexiones[dire].recv_string()
                 print(resp)
-
             index += 1   
-        #socket.close() python se encarga de cerrarlas    
+        #socket.close() #python se encarga de cerrarlas    
 
     def list(self,socket,user):
         socket.send_multipart([bytes("list", encoding='utf-8'),bytes(user, encoding='utf-8')])
