@@ -3,7 +3,6 @@ import sys
 import json
 import os
 import hashlib
-import math
 
 partsize = 1024*1024 #N° MBytes
 
@@ -32,22 +31,17 @@ class Client():
         self.hashobj = Hash("sha256")
 
     def run(self):
-        #  Socket to talk to server
         try:
-            #TODO hacer una función para la conección y el envio de data con multipart
-            #función que reciva 2 o 3 parametros
             print("Connecting to hello world server…")
             socket = self.context.socket(zmq.REQ) #REQ este socket va a ser utilizado para hacer solicitudes
             
-            
             cmd = sys.argv[1]
             if cmd == 'upload':
-                socket.connect("tcp://{}".format(sys.argv[4])) #Se conect de modo local, por el pueto indicado en la linea de comandos
+                socket.connect("tcp://{}".format(sys.argv[4])) #conexión con el proxy, el argumento 4 es la dirección del proxy
                 filename = sys.argv[2]
                 info_send = self.sendInfoProxy(socket,filename)
                 self.sendDataServers(info_send)
                 socket.close()
-                #self.upload(socket,filename)
                 
             elif cmd == 'list':
                 socket.connect("tcp://{}".format(sys.argv[3])) #Se conect de modo local, por el pueto indicado en la linea de comandos
@@ -60,7 +54,6 @@ class Client():
                 filetodownload = sys.argv[2]
                 user = sys.argv[3]
                 self.download(socket,filetodownload,user)
-                socket.close()
                 
             else:
                 print('Error, comando no valido')
@@ -71,8 +64,6 @@ class Client():
         print("enviando info al proxy de {}".format(filename))
         hash_whole_file = self.complethash(filename)
         part_hash = self.partHash(filename)
-        #print("hash_whole_file: {}".format(hash_whole_file))
-        #print("parthash: {}".format(part_hash))
         user = sys.argv[3]
         fileinfo = {
             "user": user,
@@ -81,40 +72,33 @@ class Client():
             "complethash": hash_whole_file
         }
         #socket.send_json(fileinfo)
-        str_json = json.dumps(fileinfo)
+        str_json = json.dumps(fileinfo) #se convierte el json en una cadena
         socket.send_multipart([b'upload', str_json.encode('utf-8')])
         resp = socket.recv_json()
         print(resp)
         return resp
 
-    #TODO optimizar conexiones y envio de datos a los servers (agruparlos)
     def sendDataServers(self, info_send):
-        #conexiones = {}
-        context = zmq.Context()
-        #socket = context.socket(zmq.REQ)
-        #conexiones["s"] = socket
+        #TODO  for next implementation: user deleted in json when file already exist, set array of user
         dir_servers = info_send['servers']
-
-        #lista sin repetir de las direcciones
-        #dir_servers_new = list(set(dir_servers))
         dir_servers_new = []
 
+        #lista sin repetir de las direcciones de los servers
         for address in dir_servers:
             if not(address in dir_servers_new):
                 dir_servers_new.append(address) 
 
         print(dir_servers_new)
-        index = 0
         
+        #por cada servidor envio los paquetes correspondientes
         for i in range(len(dir_servers_new)):
-            socket = context.socket(zmq.REQ)
+            socket = self.context.socket(zmq.REQ)
             socket.connect("tcp://"+dir_servers_new[i])
             len_array = len(dir_servers)
-            #intervalo = math.ceil(len_array / len(dir_servers_new))
-            intervalo = len(dir_servers_new) 
+            intervalo = len(dir_servers_new) #salto de acuerdo al número de servers que tenga
             
             for j in range(i,len_array,intervalo):
-                print("index: "+str(j))
+                #print("index: "+str(j))
                 data_bytes = self.readPart(info_send['filename'],j)
                 socket.send_multipart([b'upload', info_send['parts'][j].encode('utf-8'), data_bytes])
                 resp = socket.recv_string()
@@ -131,6 +115,7 @@ class Client():
     def download(self,socket,filetodownload,user):
         # send request to proxy about file client wants download
         # proxy return server address and parts_hash to download
+        # Group file of each server and download
         socket.send_multipart([b'download', filetodownload.encode('utf-8'), user.encode('utf-8')])
         resp_proxy = socket.recv_json()
         print(resp_proxy)
@@ -141,9 +126,9 @@ class Client():
             dir_servers = resp_proxy['servers']
             #print(dir_servers)
             index = 0
-            for dir in dir_servers:
+            for dire in dir_servers:
                 socket = self.context.socket(zmq.REQ)
-                socket.connect("tcp://" + dir)
+                socket.connect("tcp://" + dire)
                 socket.send_multipart([b'download', resp_proxy['parts'][index].encode('utf-8')])
                 resp = socket.recv_multipart()
                 
@@ -161,37 +146,20 @@ class Client():
     def complethash(self,filename):
         #'rb' read binary
         with open(filename, 'rb') as f:
-            completbytes = f.read()
-            #print("completbytes: {}".format(completbytes))
-            hash= self.hashobj.getHash(completbytes)
-            #print("complethash: {}".format(hash))
+            completbytes = f.read() #obtengo todos los bytes
+            hash= self.hashobj.getHash(completbytes) #hash de los bytes
             return hash
 
     def partHash(self,filename):
         hashes = []
         with open(filename,'rb') as f:
             while True:
-                partbytes = f.read(partsize)
+                partbytes = f.read(partsize) #leo solo una parte del archivo (partsize=1M)
                 if not partbytes:
                     break
                 parthash= self.hashobj.getHash(partbytes)
                 hashes.append(parthash)
-                #print("parthash: {}".format(parthash))
             return hashes
-
-
-    def sendRequest(self,socket,option,filename,user,complethash):
-        with open(filename,'rb') as f:
-            while True:
-                partbytes = f.read(partsize)
-                parthash= self.hashobj.getHash(partbytes)
-                print("parthash: {}".format(parthash))
-                if not partbytes:
-                    break
-                socket.send_multipart([option, filename.encode('utf-8'), user.encode('utf-8'), partbytes, parthash.encode('utf-8'), complethash.encode('utf-8')])
-                resp = socket.recv_string()
-                print(resp)
-            print("File created")
     
     def readPart(self,filename, index):
         bytes = 0

@@ -115,7 +115,7 @@ class FServer():
                 
                 with open(dirserver + name_parthash, 'wb') as f:
                     f.write(message[2])
-                    socket.send_string("File created!!")
+                    socket.send_string("Part upload!!")
 
             #TODO set try except when user don´t exist
             elif message[0] == b'list':
