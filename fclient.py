@@ -3,6 +3,7 @@ import sys
 import json
 import os
 import hashlib
+import math
 
 partsize = 1024*1024 #N° MBytes
 
@@ -88,32 +89,38 @@ class Client():
 
     #TODO optimizar conexiones y envio de datos a los servers (agruparlos)
     def sendDataServers(self, info_send):
-        conexiones = {}
+        #conexiones = {}
         context = zmq.Context()
-        socket = context.socket(zmq.REQ)
+        #socket = context.socket(zmq.REQ)
         #conexiones["s"] = socket
         dir_servers = info_send['servers']
-        #print(dir_servers)
+
+        #lista sin repetir de las direcciones
+        #dir_servers_new = list(set(dir_servers))
+        dir_servers_new = []
+
+        for address in dir_servers:
+            if not(address in dir_servers_new):
+                dir_servers_new.append(address) 
+
+        print(dir_servers_new)
         index = 0
-
-        for dire in dir_servers:
-            #socket = self.context.socket(zmq.REQ)
-            if not (dire in conexiones):
-                socket.connect("tcp://" + dire)
-                #print(connection) 
-                conexiones[dire] = socket
-                print("new connection")
-
-            with open(info_send['filename'],'rb') as f:
-                partbytes = f.read(partsize)
-                if not partbytes:
-                    break
-                conexiones[dire].send_multipart([b'upload', info_send['parts'][index].encode('utf-8'),  partbytes])
-                print(dire)
-                resp = conexiones[dire].recv_string()
+        
+        for i in range(len(dir_servers_new)):
+            socket = context.socket(zmq.REQ)
+            socket.connect("tcp://"+dir_servers_new[i])
+            len_array = len(dir_servers)
+            #intervalo = math.ceil(len_array / len(dir_servers_new))
+            intervalo = len(dir_servers_new) 
+            
+            for j in range(i,len_array,intervalo):
+                print("index: "+str(j))
+                data_bytes = self.readPart(info_send['filename'],j)
+                socket.send_multipart([b'upload', info_send['parts'][j].encode('utf-8'), data_bytes])
+                resp = socket.recv_string()
                 print(resp)
-            index += 1   
-        #socket.close() #python se encarga de cerrarlas    
+
+            socket.close() 
 
     def list(self,socket,user):
         socket.send_multipart([bytes("list", encoding='utf-8'),bytes(user, encoding='utf-8')])
@@ -185,6 +192,13 @@ class Client():
                 resp = socket.recv_string()
                 print(resp)
             print("File created")
+    
+    def readPart(self,filename, index):
+        bytes = 0
+        with open(filename, 'rb') as f:
+            f.seek(partsize*index)
+            bytes = f.read(partsize)
+        return bytes
         
 
 if __name__ == "__main__":
