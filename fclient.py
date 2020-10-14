@@ -106,6 +106,14 @@ class Client():
 
             socket.close() 
 
+    def uniqueAdresses(self, dir_servers):
+        dir_servers_new = []
+        for address in dir_servers:
+            if not(address in dir_servers_new):
+                dir_servers_new.append(address)
+        return dir_servers_new
+
+
     def list(self,socket,user):
         socket.send_multipart([bytes("list", encoding='utf-8'),bytes(user, encoding='utf-8')])
         resp = socket.recv_multipart()
@@ -125,6 +133,28 @@ class Client():
             filename = resp_proxy['filename']
             dir_servers = resp_proxy['servers']
             #print(dir_servers)
+
+            dir_servers_new = self.uniqueAdresses(dir_servers)
+
+            #por cada servidor descargo los paquetes correspondientes
+            for i in range(len(dir_servers_new)):
+                socket = self.context.socket(zmq.REQ)
+                socket.connect("tcp://"+dir_servers_new[i])
+                len_array = len(dir_servers)
+                intervalo = len(dir_servers_new) #salto de acuerdo al número de servers que tenga
+                
+                for j in range(i,len_array,intervalo):
+                    socket.send_multipart([b'download', resp_proxy['parts'][j].encode('utf-8')])
+                    resp = socket.recv_multipart()
+                
+                    if resp[0] == b'downloading':
+                        with open('downloads/'+resp_proxy['parts'][j], 'wb') as f:
+                            f.write(resp[1])
+                        print("parte descargada")
+                socket.close()
+            self.buildFile(resp_proxy['parts'])
+            
+            """
             index = 0
             for dire in dir_servers:
                 socket = self.context.socket(zmq.REQ)
@@ -138,7 +168,7 @@ class Client():
                     print("parte descargada")
                 index += 1
                 socket.close()
-            print("download ready")
+            print("download ready")"""
 
         else:
             print("don´t founded")
@@ -167,7 +197,16 @@ class Client():
             f.seek(partsize*index)
             bytes = f.read(partsize)
         return bytes
-        
+    
+    #TODO do function
+    def buildFile(self, parthash):
+        pass
+        """
+        with open(filename, 'rb') as f:
+            completbytes = f.read() #obtengo todos los bytes
+            hash= self.hashobj.getHash(completbytes) #hash de los bytes
+            return hash"""
+
 
 if __name__ == "__main__":
     client = Client()
