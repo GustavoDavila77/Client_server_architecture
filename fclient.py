@@ -3,6 +3,7 @@ import sys
 import json
 import os
 import hashlib
+from os import remove
 
 partsize = 1024*1024 #N° MBytes
 
@@ -31,34 +32,31 @@ class Client():
         self.hashobj = Hash("sha256")
 
     def run(self):
-        try:
-            print("Connecting to hello world server…")
-            socket = self.context.socket(zmq.REQ) #REQ este socket va a ser utilizado para hacer solicitudes
+        print("Connecting to hello world server…")
+        socket = self.context.socket(zmq.REQ) #REQ este socket va a ser utilizado para hacer solicitudes
+        
+        cmd = sys.argv[1]
+        if cmd == 'upload':
+            socket.connect("tcp://{}".format(sys.argv[4])) #conexión con el proxy, el argumento 4 es la dirección del proxy
+            filename = sys.argv[2]
+            info_send = self.sendInfoProxy(socket,filename)
+            self.sendDataServers(info_send)
+            socket.close()
             
-            cmd = sys.argv[1]
-            if cmd == 'upload':
-                socket.connect("tcp://{}".format(sys.argv[4])) #conexión con el proxy, el argumento 4 es la dirección del proxy
-                filename = sys.argv[2]
-                info_send = self.sendInfoProxy(socket,filename)
-                self.sendDataServers(info_send)
-                socket.close()
-                
-            elif cmd == 'list':
-                socket.connect("tcp://{}".format(sys.argv[3])) #Se conect de modo local, por el pueto indicado en la linea de comandos
-                user = sys.argv[2]
-                self.list(socket,user)
-                socket.close()
-                
-            elif cmd == 'download':
-                socket.connect("tcp://{}".format(sys.argv[4])) 
-                filetodownload = sys.argv[2]
-                user = sys.argv[3]
-                self.download(socket,filetodownload,user)
-                
-            else:
-                print('Error, comando no valido')
-        except ValueError:
-            print("No se pudo conectar al server")
+        elif cmd == 'list':
+            socket.connect("tcp://{}".format(sys.argv[3])) #Se conect de modo local, por el pueto indicado en la linea de comandos
+            user = sys.argv[2]
+            self.list(socket,user)
+            socket.close()
+            
+        elif cmd == 'download':
+            socket.connect("tcp://{}".format(sys.argv[4])) 
+            filetodownload = sys.argv[2]
+            user = sys.argv[3]
+            self.download(socket,filetodownload,user)
+            
+        else:
+            print('Error, comando no valido')
 
     def sendInfoProxy(self,socket,filename):
         print("enviando info al proxy de {}".format(filename))
@@ -152,23 +150,8 @@ class Client():
                             f.write(resp[1])
                         print("parte descargada")
                 socket.close()
-            self.buildFile(resp_proxy['parts'])
-            
-            """
-            index = 0
-            for dire in dir_servers:
-                socket = self.context.socket(zmq.REQ)
-                socket.connect("tcp://" + dire)
-                socket.send_multipart([b'download', resp_proxy['parts'][index].encode('utf-8')])
-                resp = socket.recv_multipart()
-                
-                if resp[0] == b'downloading':
-                    with open('downloads/'+filename, 'ab') as f:
-                        f.write(resp[1])
-                    print("parte descargada")
-                index += 1
-                socket.close()
-            print("download ready")"""
+
+            self.buildFile(resp_proxy['parts'], filename)
 
         else:
             print("don´t founded")
@@ -199,13 +182,20 @@ class Client():
         return bytes
     
     #TODO do function
-    def buildFile(self, parthash):
-        pass
-        """
-        with open(filename, 'rb') as f:
-            completbytes = f.read() #obtengo todos los bytes
-            hash= self.hashobj.getHash(completbytes) #hash de los bytes
-            return hash"""
+    def buildFile(self, parthash, filename):
+        print("Entre a buildFile")
+        fbytes = 0
+        for part in parthash:
+            f = open('downloads/'+ part,'rb')
+            fbytes = f.read()
+            f.close()
+
+            f = open('downloads/'+ filename,'ab')
+            f.write(fbytes)
+            remove('downloads/'+part)
+            f.close() 
+
+        print("File build")
 
 
 if __name__ == "__main__":
