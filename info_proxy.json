@@ -1,20 +1,3 @@
 {
-    "31dd8419b243ced724d9356cc06baf03d9adcca1f8e9972ee0691621c218e74e": {
-        "user": "tavo",
-        "filename": "underground.mp4",
-        "parts": [
-            "24ee22809f6249503b66cbf5ed41b70eb951ad38ec24fb2cf8db4845f66bc801",
-            "f4096548e293ba6bc112d003f2b85e6289867200f2a5ffdcd761918f6418ac7e",
-            "6241b63a0a511543dfc26f83a2475086890f7489d17c1c2ff7ec2c59cc7ba95f",
-            "56eac47bf379d00a65febdbf82a37de604bb4f024f2eb4657fcf74409494d82f",
-            "e8f879903ae37e908977129b24d47b83e7597ed930cd9c80f83ac41305c9efe3"
-        ],
-        "servers": [
-            "localhost:6000",
-            "localhost:7000",
-            "localhost:8000",
-            "localhost:6000",
-            "localhost:7000"
-        ]
-    }
+    
 }

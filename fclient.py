@@ -1,3 +1,21 @@
+"""
+///// Comands for run fclient //////
+
+upload 
+- python fclient.py upload archivotoupload user dir_proxy
+- example
+    python fclient.py upload song.mp4 user2 localhost:4000
+
+list
+- python fclient.py list user dir_proxy
+- example
+    python fclient.py list user2 localhost:4000
+
+download
+- python fclient.py download filetodownload user dir_proxy
+- example
+    python fclient.py download underground.mp4 tavo localhost:4000
+"""
 import zmq
 import sys
 import json

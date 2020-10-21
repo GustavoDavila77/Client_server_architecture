@@ -1,3 +1,7 @@
+"""
+Comands for run
+python fserver.py 7000 localhost:4000 server2 3000
+"""
 import time
 import zmq
 import os

@@ -1,3 +1,7 @@
+"""
+Comands for run
+python proxy.py 4000
+"""
 import zmq
 import os
 import json
@@ -24,7 +28,10 @@ class Proxy():
             if message[0] == b'list':
                 user = message[1].decode('utf-8')
                 list_file = self.listFilesUser(user)
-                socket.send_multipart(list_file)
+                if list_file == []:
+                    socket.send_multipart([b'UserNotExist'])
+                else:
+                    socket.send_multipart(list_file)
 
             if message[0] == b'download':
                 filename = message[1].decode('utf-8')
