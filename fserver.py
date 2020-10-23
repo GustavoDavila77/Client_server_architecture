@@ -121,7 +121,9 @@ class FServer():
                     f.write(message[2])
                     socket.send_string("Part upload!!")
 
-            #TODO set try except when user don´t exist
+            #In the architecture server-cliente with proxy
+            #this part of code isn´t usefull because list option
+            #is responsability of proxy
             elif message[0] == b'list':
                 user = message[1].decode('utf-8')
                 diruser = "D:\Escritorio\Arquitectura cliente servidor\code/files/"+user+"/"
